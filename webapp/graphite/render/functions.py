@@ -2101,6 +2101,30 @@ def constantLine(requestContext, value):
   series = TimeSeries(str(value), start, end, step, [value, value])
   return [series]
 
+def aggregateLine(requestContext, seriesList, func='avg'):
+  """
+  Draws a horizontal line based the function applied to the series
+
+  Example:
+
+  .. code-block:: none
+
+    &target=aggregateLineSeries(server.connections.total, 'avg')
+
+  """
+  t_funcs = { 'avg': safeAvg, 'min': safeMin, 'max': safeMax }
+
+  if func not in t_funcs:
+    raise ValueError("Invalid function %s" % func)
+
+  value = t_funcs[func]( seriesList[0] )
+  name = 'aggregateLine(%s,%d)' % (seriesList[0].pathExpression, value)
+
+  series = constantLine(requestContext, value)[0]
+  series.name = name
+
+  return [series]
+
 
 def threshold(requestContext, value, label=None, color=None):
   """
@@ -2762,6 +2786,7 @@ SeriesFunctions = {
   'threshold' : threshold,
   'transformNull' : transformNull,
   'identity': identity,
+  'aggregateLine' : aggregateLine,
 
   # test functions
   'time': timeFunction,
